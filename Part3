@@ -1,0 +1,280 @@
+import pickle
+from google.colab import drive
+drive.mount('/content/drive')
+
+directory = "/content/drive/My Drive/ColabNotebook/"
+
+# Inisialisasi data awal
+prodi_data = {}
+mata_kuliah_data = {}
+mahasiswa_data = {}
+
+# Menampilkan data
+def tampilkan_data(dictionary, isMahasiswa=None):
+    print("------------------------------------------------------------")
+    if isMahasiswa:
+        for nrp, data_mhs in dictionary.items():
+            print(f"Nama: {data_mhs['nama']}")
+            print(f"NRP: {nrp}")
+            kode_prodi = data_mhs['kode_prodi']
+            print(f"Prodi: {kode_prodi} - {prodi_data.get(kode_prodi, 'Belum terdefinisi')}")
+            kode_mata_kuliah = data_mhs['mata_kuliah']
+            mata_kuliah_names = [mata_kuliah_data.get(kode, 'Belum terdefinisi') for kode in kode_mata_kuliah]
+            print(f"Mata kuliah: {kode_mata_kuliah} - {', '.join(mata_kuliah_names)}")
+            print()
+    else:
+        for kode, nama in dictionary.items():
+            print(f"{kode} = {nama}")
+
+
+# Menghapus data
+def hapus_data(dictionary, jenis):
+    print("------------------------------------------------------------")
+    print(f"Berikut data {jenis} yang tersimpan: ")
+    if jenis == "mahasiswa":
+        tampilkan_data(dictionary, True)
+    else:
+        tampilkan_data(dictionary)
+    kode = input(f"Masukkan kode {jenis} yang akan dihapus: ")
+    if kode in dictionary:
+        del dictionary[kode]
+        print(f"Data {jenis} dengan kode {kode} berhasil dihapus.")
+    else:
+      print(f"Data mata kuliah dengan kode {kode} tidak ditemukan.")
+
+# Mencari data mahasiswa
+def cari_data_mahasiswa(dictionary):
+    while True:
+        print("------------------------------------------------------------")
+        print("Pilih")
+        print("1. Cari berdasarkan Nama")
+        print("2. Cari berdasarkan NRP")
+        print("3. Cari berdasarkan Prodi")
+        print("4. Cari berdasarkan Mata Kuliah")
+        print("5. Kembali ke menu utama")
+        pilihan = input("Pilihan: ")
+
+        daftar_nrp = dictionary.keys()
+
+        if pilihan == '1':
+            input_nama = input("Masukkan nama mahasiswa yang dicari: ")
+            nrp_yang_cocok = list(filter(lambda nrp: input_nama.lower() in dictionary[nrp]["nama"].lower(), daftar_nrp))
+            if nrp_yang_cocok:
+                tampilkan_hasil_cari(nrp_yang_cocok)
+            else:
+                print("Hasil pencarian tidak ditemukan!")
+
+        elif pilihan == '2':
+            input_nrp = input("Masukkan NRP mahasiswa yang dicari: ")
+            nrp_yang_cocok = list(filter(lambda nrp: input_nrp in nrp, daftar_nrp))
+            if nrp_yang_cocok:
+                tampilkan_hasil_cari(nrp_yang_cocok)
+            else:
+                print("Hasil pencarian tidak ditemukan!")
+
+        elif pilihan == '3':
+            input_prodi = input("Masukkan kode prodi dari mahasiswa yang dicari: ")
+            nrp_yang_cocok = list(filter(lambda nrp: input_prodi == dictionary[nrp]['kode_prodi'], daftar_nrp))
+            if nrp_yang_cocok:
+                tampilkan_hasil_cari(nrp_yang_cocok)
+            else:
+                print("Hasil pencarian tidak ditemukan!")
+
+        elif pilihan == '4':
+            input_kode_mata_kuliah = input("Masukkan kode mata kuliah dari mahasiswa yang dicari: ")
+            nrp_yang_cocok = list(filter(lambda nrp: input_kode_mata_kuliah in dictionary[nrp]['mata_kuliah'], daftar_nrp))
+            if nrp_yang_cocok:
+                tampilkan_hasil_cari(nrp_yang_cocok)
+            else:
+                print("Hasil pencarian tidak ditemukan!")
+
+        elif pilihan == '5':
+            break
+
+        else:
+            print("Pilihan tidak valid, silahkan pilih kembali!")
+
+# Menampilkan hasil pencarian mahasiswa
+def tampilkan_hasil_cari(list_of_nrp):
+    for nrp in list_of_nrp:
+        print(f"Nama: {mahasiswa_data[nrp]['nama']}")
+        print(f"NRP: {nrp}")
+        kode_prodi = mahasiswa_data[nrp]['kode_prodi']
+        print(f"Prodi: {kode_prodi} - {prodi_data.get(kode_prodi, 'Belum terdefinisi')}")
+        kode_mata_kuliah = mahasiswa_data[nrp]['mata_kuliah']
+        mata_kuliah_names = [mata_kuliah_data.get(kode, 'Belum terdefinisi') for kode in kode_mata_kuliah]
+        print(f"Mata kuliah: {kode_mata_kuliah} - {', '.join(mata_kuliah_names)}")
+        print()
+
+while True:
+    print("------------------------------------------------------------")
+    print("Pilih:")
+    print("1. Isi Data")
+    print("2. Hapus Data")
+    print("3. Tampilkan Data")
+    print("4. Cari Data Mahasiswa")
+    print("5. Akses Database")
+    print("6. Keluar")
+
+    pilihan = input("Pilihan: ")
+
+    if pilihan == '1':
+        while True:
+            print("------------------------------------------------------------")
+            print("Pilih jenis data yang akan diisi:")
+            print("1. Data Mahasiswa")
+            print("2. Data Prodi")
+            print("3. Data Mata kuliah")
+            print("4. Kembali ke menu utama")
+            pilihan = input("Pilihan: ")
+
+            if pilihan == '1':
+                print("------------------------------------------------------------")
+                nrp = input("Masukkan NRP: ")
+                nama = input("Masukkan nama: ")
+                kode_prodi = input("Kode prodi: ")
+
+                mahasiswa_data[nrp] = {
+                    'nama': nama,
+                    'kode_prodi': kode_prodi,
+                    'mata_kuliah': []
+                }
+
+                kode_mata_kuliah = input("Berikut masukkan kode mata kuliah, tekan 0 untuk selesai: ")
+                temp_int = 1
+                while kode_mata_kuliah != '0':
+                    kode_mata_kuliah = input(f"Masukkan kode mata kuliah-{temp_int}: ")
+                    if kode_mata_kuliah != '0':
+                        mahasiswa_data[nrp]['mata_kuliah'].append(kode_mata_kuliah)
+                    temp_int += 1
+                print("Data mahasiswa berhasil disimpan.")
+
+            elif pilihan == '2':
+                print("------------------------------------------------------------")
+                kode_prodi = input("Masukkan kode prodi [0 untuk batal]: ")
+                if kode_prodi == '0':
+                    continue
+                nama_prodi = input("Masukkan nama prodi: ")
+                prodi_data[kode_prodi] = nama_prodi
+                print("Data prodi berhasil disimpan.")
+
+            elif pilihan == '3':
+                print("------------------------------------------------------------")
+                kode_mata_kuliah = input("Masukkan kode mata kuliah [0 untuk batal]: ")
+                if kode_mata_kuliah == '0':
+                    continue
+                nama_mata_kuliah = input("Masukkan nama mata kuliah: ")
+                mata_kuliah_data[kode_mata_kuliah] = nama_mata_kuliah
+                print("Data mata kuliah berhasil disimpan.")
+
+            elif pilihan == '4':
+                break
+            else:
+                print("------------------------------------------------------------")
+                print("Pilihan tidak valid, silahkan pilih kembali!")
+
+    elif pilihan == '2':
+        while True:
+            print("------------------------------------------------------------")
+            print("Pilih jenis data yang akan dihapus: ")
+            print("1. Data Mahasiswa")
+            print("2. Data Prodi")
+            print("3. Data Mata kuliah")
+            print("4. Kembali ke menu utama")
+            pilihan = input("Pilihan: ")
+
+            if pilihan == '1':
+                hapus_data(mahasiswa_data, "mahasiswa")
+
+            elif pilihan == '2':
+                hapus_data(prodi_data, "program studi")
+
+            elif pilihan == '3':
+                hapus_data(mata_kuliah_data, "mata kuliah")
+
+            elif pilihan == '4':
+                break
+            else:
+                print("Pilihan tidak valid, silahkan pilih kembali!")
+
+    elif pilihan == '3':
+        while True:
+            print("------------------------------------------------------------")
+            print("Pilih jenis data yang akan ditampilkan: ")
+            print("1. Data Mahasiswa")
+            print("2. Data Prodi")
+            print("3. Data Mata kuliah")
+            print("4. Kembali ke menu utama")
+            pilihan = input("Pilihan: ")
+
+            if pilihan == '1':
+                print("Berikut data mahasiswa yang tersimpan: ")
+                tampilkan_data(mahasiswa_data, True)
+
+            elif pilihan == '2':
+                print("Berikut data program studi yang tersimpan: ")
+                tampilkan_data(prodi_data)
+
+            elif pilihan == '3':
+                print("Berikut data mata kuliah yang tersimpan: ")
+                tampilkan_data(mata_kuliah_data)
+
+            elif pilihan == '4':
+                break
+            else:
+                print("------------------------------------------------------------")
+                print("Pilihan tidak valid, silahkan pilih kembali!")
+
+    elif pilihan == '4':
+        cari_data_mahasiswa(mahasiswa_data)
+
+    elif pilihan == '5':
+        while True:
+            print("------------------------------------------------------------")
+            print("Pilih untuk mengakses database: ")
+            print("1. Simpan Database")
+            print("2. Load Database")
+            print("3. Kembali ke menu utama")
+            pilihan = input("Pilihan: ")
+
+            if pilihan == '1':
+                print("------------------------------------------------------------")
+                nama_file = input("Masukkan nama file database-nya [atau kosongkan untuk batal]: ")
+                link = f"{directory}{nama_file}.txt"
+                if nama_file:
+                    try:
+                        with open(link, 'wb') as file:
+                            pickle.dump((prodi_data, mata_kuliah_data, mahasiswa_data), file)
+                            print("Database berhasil disimpan.")
+                    except Exception as e:
+                        print(f"Terjadi kesalahan saat menyimpan database: {e}")
+
+            elif pilihan == '2':
+                print("------------------------------------------------------------")
+                nama_file = input("Masukkan nama file database-nya [atau kosongkan untuk batal]: ")
+                link = f"{directory}{nama_file}.txt"
+                if nama_file:
+                    try:
+                        with open(link, 'rb') as file:
+                            prodi_data, mata_kuliah_data, mahasiswa_data = pickle.load(file)
+                            print("Database berhasil dimuat")
+                    except FileNotFoundError:
+                        print("File database tidak ditemukan")
+                    except Exception as e:
+                        print(f"Terjadi kesalahan saat memuat database: {e}")
+
+            elif pilihan == '3':
+                break
+
+            else:
+                print("------------------------------------------------------------")
+                print("Pilihan tidak valid, silahkan pilih kembali!")
+
+
+    elif pilihan == '6':
+        print("------------------------------------------------------------")
+        print("Program selesai.")
+        break
+
+    else:
+        print("Pilihan tidak valid, silahkan pilih kembali!")
