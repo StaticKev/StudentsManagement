@@ -44,6 +44,10 @@ def hapus_data(dictionary, jenis):
 
 # Mencari data mahasiswa
 def cari_data_mahasiswa(dictionary):
+
+    daftar_nrp = dictionary.keys()
+    nrp_yang_cocok = []
+    
     while True:
         print("------------------------------------------------------------")
         print("Pilih")
@@ -54,45 +58,55 @@ def cari_data_mahasiswa(dictionary):
         print("5. Kembali ke menu utama")
         pilihan = input("Pilihan: ")
 
-        daftar_nrp = dictionary.keys()
-
         if pilihan == '1':
             input_nama = input("Masukkan nama mahasiswa yang dicari: ")
             nrp_yang_cocok = list(filter(lambda nrp: input_nama.lower() in dictionary[nrp]["nama"].lower(), daftar_nrp))
-            if nrp_yang_cocok:
-                tampilkan_hasil_cari(nrp_yang_cocok)
-            else:
-                print("Hasil pencarian tidak ditemukan!")
 
         elif pilihan == '2':
             input_nrp = input("Masukkan NRP mahasiswa yang dicari: ")
             nrp_yang_cocok = list(filter(lambda nrp: input_nrp in nrp, daftar_nrp))
-            if nrp_yang_cocok:
-                tampilkan_hasil_cari(nrp_yang_cocok)
-            else:
-                print("Hasil pencarian tidak ditemukan!")
 
         elif pilihan == '3':
             input_prodi = input("Masukkan kode prodi dari mahasiswa yang dicari: ")
             nrp_yang_cocok = list(filter(lambda nrp: input_prodi == dictionary[nrp]['kode_prodi'], daftar_nrp))
-            if nrp_yang_cocok:
-                tampilkan_hasil_cari(nrp_yang_cocok)
-            else:
-                print("Hasil pencarian tidak ditemukan!")
 
         elif pilihan == '4':
             input_kode_mata_kuliah = input("Masukkan kode mata kuliah dari mahasiswa yang dicari: ")
             nrp_yang_cocok = list(filter(lambda nrp: input_kode_mata_kuliah in dictionary[nrp]['mata_kuliah'], daftar_nrp))
-            if nrp_yang_cocok:
-                tampilkan_hasil_cari(nrp_yang_cocok)
-            else:
-                print("Hasil pencarian tidak ditemukan!")
 
         elif pilihan == '5':
             break
 
         else:
             print("Pilihan tidak valid, silahkan pilih kembali!")
+
+        if not nrp_yang_cocok:
+            cari_lagi = True
+            while True: 
+                print("Tidak ada data yang ditemukan. Ingin mencari lagi atau kembali ke menu utama?")
+                print("1. Cari lagi")
+                print("2. Kembali ke menu utama")
+                pilihan = input("Pilihan: ")
+
+                if pilihan == '1':
+                    cari_lagi = True
+                    break
+                elif pilihan == '2':
+                    cari_lagi = False
+                    break
+                else: 
+                    print("Pilihan tidak valid, silahkan pilih kembali!")
+            if cari_lagi:
+                continue
+            else:
+                break
+        else:
+            break
+
+    if nrp_yang_cocok:
+        return nrp_yang_cocok
+    else: 
+        return []
 
 # Menampilkan hasil pencarian mahasiswa
 def tampilkan_hasil_cari(list_of_nrp):
@@ -226,7 +240,25 @@ while True:
                 print("Pilihan tidak valid, silahkan pilih kembali!")
 
     elif pilihan == '4':
-        cari_data_mahasiswa(mahasiswa_data)
+        while True:
+           hasil_cari = cari_data_mahasiswa(mahasiswa_data)
+           if hasil_cari:
+               tampilkan_hasil_cari(hasil_cari)
+               while True: 
+                   print("Pilih untuk melakukan perubahan pada data mahasiswa: ")
+                   print("1. Edit Data Mahasiswa")
+                   print("2. Kembali ke Menu Utama")
+                   pilihan = input("Pilihan: ")
+                   if pilihan == '1':
+                       # Nanti diisi fungsi untuk merubah data mahasiswa
+                       pass 
+                   elif pilihan == '2':
+                       break
+                   else:
+                       print("Pilihan tidak valid, silahkan pilih kembali!")
+               break
+           else: 
+               break
 
     elif pilihan == '5':
         while True:
