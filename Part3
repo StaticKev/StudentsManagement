@@ -243,8 +243,10 @@ while True:
         while True:
            hasil_cari = cari_data_mahasiswa(mahasiswa_data)
            if hasil_cari:
+               print("------------------------------------------------------------")
                tampilkan_hasil_cari(hasil_cari)
                while True: 
+                   print("------------------------------------------------------------")
                    print("Pilih untuk melakukan perubahan pada data mahasiswa: ")
                    print("1. Edit Data Mahasiswa")
                    print("2. Kembali ke Menu Utama")
