@@ -1,0 +1,330 @@
+import pickle
+from google.colab import drive
+drive.mount('/content/drive')
+
+directory = "/content/drive/My Drive/ColabNotebook/"
+
+# Inisialisasi data awal
+mahasiswa_data = {}
+prodi_data = {}
+mata_kuliah_data = {}
+
+# Pola kata yang digunakan dalam menu
+MENU_UTAMA = {'Pilih':['Isi Data', 'Hapus Data', 'Edit Data', 'Tampilkan Data Keseluruhan', 'Cari Mahasiswa', 'Akses Database', 'Keluar']}
+MENU_SEKUNDER = ['Data Mahasiswa', 'Data Prodi', 'Data Mata Kuliah', 'Kembali']
+MENU_ISI = {'Isi Untuk' : MENU_SEKUNDER}
+MENU_HAPUS = {'Hapus Untuk' : MENU_SEKUNDER}
+MENU_TAMPIL = {'Tampilkan Data Keseluruhan Untuk' : MENU_SEKUNDER}
+MENU_DB = {'Akses untuk' : ['Simpan Database', 'Load Database', 'Kembali']}
+MENU_EDIT = {'Edit Untuk': MENU_SEKUNDER}
+MENU_SUB_CARI = ['Berdasarkan NRP', 'Berdasarkan Nama', 'Berdasarkan Prodi', 'Berdasarkan Mata Kuliah', 'Kembali']
+MENU_CARI = {'Cari Data Mahasiswa': MENU_SUB_CARI}
+
+# Fungsi untuk menampilkan menu
+def menu(opsi):
+    k = list(opsi.keys())
+    judul = k[0]
+    print(judul)
+    for i in range(len(opsi[judul])):
+        m = opsi[judul][i]
+        print(f"{i+1}. {m}")
+    menu = int(input("Pilihan: "))
+    if menu not in range(1,len(opsi[judul])+1):
+        hasil = 0
+        print("Pilihan tidak valid, silahkan pilih kembali!")
+    else:
+        hasil = opsi[list(opsi.keys())[0]][menu - 1]
+    print(100*'-')
+    return hasil
+
+# Funsi-fungsi untuk mengakses database
+def simpan_db():
+    nama_file = input("Masukkan nama file database-nya [atau kosongkan untuk batal]: ")
+    link = f"{directory}{nama_file}.txt"
+    if nama_file:
+        try:
+            with open(link, 'wb') as file:
+                pickle.dump((prodi_data, mata_kuliah_data, mahasiswa_data), file)
+                print("Database berhasil disimpan.")
+        except Exception as e:
+            print(f"Terjadi kesalahan saat menyimpan database: {e}")
+    print(100*'-')
+
+def load_db():
+    nama_file = input("Masukkan nama file database-nya [atau kosongkan untuk batal]: ")
+    link = f"{directory}{nama_file}.txt"
+    global prodi_data, mata_kuliah_data, mahasiswa_data
+    if nama_file:
+        try:
+            with open(link, 'rb') as file:
+                prodi_data, mata_kuliah_data, mahasiswa_data = pickle.load(file)
+                print("Database berhasil dimuat")
+        except FileNotFoundError:
+            print("File database tidak ditemukan")
+        except Exception as e:
+            print(f"Terjadi kesalahan saat memuat database: {e}")
+    print(100*'-')
+
+# Fungsi-funsgi untuk mengisi data
+def isi_mahasiswa():
+    nrp = input("Masukkan NRP: ")
+    nama = input("Masukkan nama: ")
+    kode_prodi = input("Kode prodi: ")
+
+    mahasiswa_data[nrp] = {
+        'nama': nama,
+        'kode_prodi': kode_prodi,
+        'mata_kuliah': []
+    }
+
+    kode_mata_kuliah = input("Berikut masukkan kode mata kuliah (Enter untuk mulai memasukkan), tekan 0 untuk selesai: ")
+    counter = 1
+    while kode_mata_kuliah != '0':
+        kode_mata_kuliah = input(f"Masukkan kode mata kuliah-{counter}: ")
+        if kode_mata_kuliah != '0':
+            mahasiswa_data[nrp]['mata_kuliah'].append(kode_mata_kuliah)
+        counter += 1
+    print("Data mahasiswa berhasil disimpan.")
+    print(100*'-')
+
+def isi_prodi():
+    kode_prodi = input("Masukkan kode prodi [0 untuk batal]: ")
+    if kode_prodi != '0':
+        nama_prodi = input("Masukkan nama prodi: ")
+        prodi_data[kode_prodi] = nama_prodi
+        print("Data prodi berhasil disimpan.")
+    print(100*'-')
+
+def isi_mk():
+    kode_mata_kuliah = input("Masukkan kode mata kuliah [0 untuk batal]: ")
+    if kode_mata_kuliah != '0':
+        nama_mata_kuliah = input("Masukkan nama mata kuliah: ")
+        mata_kuliah_data[kode_mata_kuliah] = nama_mata_kuliah
+        print("Data mata kuliah berhasil disimpan.")
+    print(100*'-')
+
+# Fungsi untuk menghapus data
+def hapus_data(dictionary, jenis):
+    print(f"Berikut data {jenis} yang tersimpan: ")
+    if jenis == "mahasiswa":
+        tampil_data(dictionary, True)
+    else:
+        tampil_data(dictionary)
+    kode = input(f"Masukkan kode {jenis} yang akan dihapus: ")
+    if kode in dictionary:
+        del dictionary[kode]
+        print(f"Data {jenis} dengan kode {kode} berhasil dihapus.")
+    else:
+      print(f"Data mata kuliah dengan kode {kode} tidak ditemukan.")
+    print(100*'-')
+
+# Fungsi untuk menampilkan data
+def tampil_data(dictionary, isMahasiswa=None):
+    if isMahasiswa:
+        for nrp, data_mhs in dictionary.items():
+            print(f"Nama: {data_mhs['nama']}")
+            print(f"NRP: {nrp}")
+            kode_prodi = data_mhs['kode_prodi']
+            print(f"Prodi: {kode_prodi} - {prodi_data.get(kode_prodi, 'Belum terdefinisi')}")
+            kode_mata_kuliah = data_mhs['mata_kuliah']
+            mata_kuliah_names = [mata_kuliah_data.get(kode, 'Belum terdefinisi') for kode in kode_mata_kuliah]
+            print(f"Mata kuliah: {kode_mata_kuliah} - {', '.join(mata_kuliah_names)}")
+            print()
+        print(100*'-')
+    else:
+        for kode, nama in dictionary.items():
+            print(f"{kode} = {nama}")
+        print(100*'-')
+
+# Cari data mahasiswa
+def cari_mahasiswa(apa):
+    daftar_nrp = mahasiswa_data.keys()
+    nrp_yang_cocok = []
+
+    while True:
+        match apa:
+            case "Berdasarkan NRP":
+                input_nrp = input("Masukkan NRP mahasiswa yang dicari: ")
+                nrp_yang_cocok = list(filter(lambda nrp: input_nrp in nrp, daftar_nrp))
+            case "Berdasarkan Nama":
+                input_nama = input("Masukkan nama mahasiswa yang dicari: ")
+                nrp_yang_cocok = list(filter(lambda nrp: input_nama.lower() in mahasiswa_data[nrp]["nama"].lower(), daftar_nrp))
+            case "Berdasarkan Prodi":
+                input_prodi = input("Masukkan kode prodi dari mahasiswa yang dicari: ")
+                nrp_yang_cocok = list(filter(lambda nrp: input_prodi == mahasiswa_data[nrp]['kode_prodi'], daftar_nrp))
+            case "Berdasarkan Mata Kuliah":
+                input_kode_mata_kuliah = input("Masukkan kode mata kuliah dari mahasiswa yang dicari: ")
+                nrp_yang_cocok = list(filter(lambda nrp: input_kode_mata_kuliah in mahasiswa_data[nrp]['mata_kuliah'], daftar_nrp))
+            case "Kembali":
+                break
+
+        if not nrp_yang_cocok:
+            cari_lagi = True
+            while True:
+                print(100*'-')
+                print("Tidak ada data yang ditemukan. Ingin mencari lagi atau kembali ke menu utama?")
+                print("1. Cari lagi")
+                print("2. Kembali ke menu utama")
+                pilihan = input("Pilihan: ")
+                if pilihan == '1':
+                    cari_lagi = True
+                    break
+                elif pilihan == '2':
+                    cari_lagi = False
+                    break
+                else:
+                    print("Pilihan tidak valid, silahkan pilih kembali!")
+            if cari_lagi:
+                print(100*'-')
+                continue
+            else:
+                break
+        else:
+            print(100*'-')
+            break
+
+    if nrp_yang_cocok:
+        return nrp_yang_cocok
+    else:
+        return []
+
+def tampilkan_hasil_cari(list_of_nrp):
+    for nrp in list_of_nrp:
+        print(f"Nama: {mahasiswa_data[nrp]['nama']}")
+        print(f"NRP: {nrp}")
+        print()
+    print(100*'-')
+
+# Fungsi untuk edit data
+def edit_data(apa):
+    while True:
+        print(f"Berikut {apa} yang tersimpan")
+
+        match apa: 
+            case "Data Mahasiswa":
+                tampil_data(mahasiswa_data, True)
+                kode = input("Masukkan NRP dari data mahasiswa yang ingin diedit (0 untuk batal): ")
+                if kode == '0':
+                    break 
+                if kode in mahasiswa_data:
+                    print(f"Data saat ini: ")
+                    tampil_data_tunggal(mahasiswa_data, kode, True)
+                    nama = input("Masukkan nama baru: ")
+                    kode_prodi = input("Masukkan kode prodi baru: ")
+                    kode_mata_kuliah = []
+                    input_kode_mk = input("Berikut masukkan kode mata kuliah (Enter untuk mulai memasukkan), tekan 0 untuk selesai: ")
+                    counter = 1
+                    while input_kode_mk != '0':
+                        input_kode_mk = input(f"Masukkan kode mata kuliah-{counter}: ")
+                        if input_kode_mk != '0':
+                            kode_mata_kuliah.append(input_kode_mk)
+                        counter += 1
+                    mahasiswa_data[kode] = {
+                        'nama': nama,
+                        'kode_prodi': kode_prodi,
+                        'mata_kuliah': kode_mata_kuliah
+                    }
+                    print("Data mahasiswa berhasil diubah.")
+                    print(100*'-')
+                    break
+                else: 
+                    print("Data tidak ditemukan!")
+            case "Data Prodi":
+                tampil_data(prodi_data)
+                kode = input("Masukkan kode prodi dari data yang ingin diedit (0 untuk batal): ")
+                if kode == '0':
+                    break
+                if kode in prodi_data:
+                    print(f"Data saat ini: ")
+                    tampil_data_tunggal(prodi_data, kode)
+                    nama = input("Masukkan nama prodi yang baru: ")
+                    prodi_data[kode] = nama
+                    print("Data prodi berhasil diubah.")
+                    print(100*'-')
+                    break
+            case "Data Mata Kuliah":
+                tampil_data(mata_kuliah_data)
+                kode = input("Masukkan kode mata kuliah dari data yang ingin diedit (0 untuk batal: )")
+                if kode == '0':
+                    break
+                if kode in mata_kuliah_data:
+                    print(f"Data saat ini: ")
+                    tampil_data_tunggal(mata_kuliah_data, kode)
+                    nama = input("Masukkan nama mata kuliah yang baru: ")
+                    mata_kuliah_data[kode] = nama
+                    print("Data mata kuliah berhasil diubah.")
+                    print(100*'-')
+                    break
+            case "Kembali": 
+                break
+
+def tampil_data_tunggal(dictionary, kode, isMahasiswa = None):
+    if isMahasiswa:
+        print(f"Nama: {dictionary[kode]['nama']}")
+        print(f"NRP: {kode}")
+        kode_prodi = dictionary[kode]['kode_prodi']
+        print(f"Prodi: {kode_prodi} - {prodi_data.get(kode_prodi, 'Belum terdefinisi')}")
+        kode_mata_kuliah = dictionary[kode]['mata_kuliah']
+        mata_kuliah_names = [mata_kuliah_data.get(kode, 'Belum terdefinisi') for kode in kode_mata_kuliah]
+        print(f"Mata kuliah: {kode_mata_kuliah} - {', '.join(mata_kuliah_names)}")
+        print(100*'-')
+    else:
+        print(f"{kode} = {dictionary[kode]}")
+
+while True:
+    coba = menu(MENU_UTAMA)
+    match coba:
+        case "Isi Data":
+            isi = menu(MENU_ISI)
+            match isi:
+                case "Data Mahasiswa":
+                    isi_mahasiswa()
+                case "Data Prodi":
+                    pass
+                    isi_prodi()
+                case "Data Mata Kuliah":
+                    pass
+                    isi_mk()
+        case "Hapus Data":
+            hapus = menu(MENU_HAPUS)
+            match hapus:
+                case "Data Mahasiswa":
+                    tampil_data(mahasiswa_data, True)
+                    hapus_data(mahasiswa_data, hapus)
+                case "Data Prodi":
+                    tampil_data(prodi_data)
+                    hapus_data(prodi_data, hapus)
+                case "Data Mata Kuliah":
+                    tampil_data(mata_kuliah_data)
+                    hapus_data(mata_kuliah_data, hapus)
+        case "Edit Data":
+            edit = menu(MENU_EDIT)
+            match edit:
+                case "Data Mahasiswa":
+                    edit_data(edit)
+                    pass
+                case "Data Prodi":
+                    edit_data(edit)
+                case "Data Mata Kuliah":
+                    edit_data(edit)
+        case "Tampilkan Data Keseluruhan":
+            tampil = menu(MENU_TAMPIL)
+            match tampil:
+                case "Data Mahasiswa":
+                    tampil_data(mahasiswa_data, True)
+                case "Data Prodi":
+                    tampil_data(prodi_data)
+                case "Data Mata Kuliah":
+                    tampil_data(mata_kuliah_data)
+        case "Cari Mahasiswa":
+            cari = menu(MENU_CARI)
+            tampilkan_hasil_cari(cari_mahasiswa(cari))
+        case "Akses Database":
+            db = menu(MENU_DB)
+            match db:
+                case "Simpan Database":
+                    simpan_db()
+                case "Load Database":
+                    load_db()
+        case "Keluar":
+            break
